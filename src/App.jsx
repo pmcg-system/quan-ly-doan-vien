@@ -108,9 +108,11 @@ function AppContent() {
       const dbContent = JSON.stringify({ members: m, plans: p, questions: q });
       const metadata = {
         name: DB_FILE_NAME,
-        parents: [FOLDER_ID],
         mimeType: 'application/json'
       };
+      if (isCreate || !driveFileId) {
+        metadata.parents = [FOLDER_ID];
+      }
 
       const form = new FormData();
       form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
