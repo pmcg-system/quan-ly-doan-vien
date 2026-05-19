@@ -168,7 +168,7 @@ function AppContent({ currentUser, handleAppLogout }) {
         return (
           <div className="space-y-6">
             {accessToken ? (
-              <DocumentManager accessToken={accessToken} />
+              <DocumentManager accessToken={accessToken} isAdmin={isAdmin} />
             ) : (
               <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center flex flex-col items-center">
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-50 mb-6">

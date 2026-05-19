@@ -5,7 +5,7 @@ import { Upload, File as FileIcon, Download, Eye, Loader2, Trash2, Search, Plus,
 const FOLDER_DEN = import.meta.env.VITE_FOLDER_VAN_BAN_DEN;
 const FOLDER_DI = import.meta.env.VITE_FOLDER_VAN_BAN_DI;
 
-export default function DocumentManager({ accessToken }) {
+export default function DocumentManager({ accessToken, isAdmin }) {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -151,36 +151,38 @@ export default function DocumentManager({ accessToken }) {
           />
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          {/* Chọn loại văn bản tải lên */}
-          <select 
-            value={uploadFolder}
-            onChange={(e) => setUploadFolder(e.target.value)}
-            className="bg-gray-50 border border-gray-200 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="DEN">Upload vào: Văn bản đến</option>
-            <option value="DI">Upload vào: Văn bản đi</option>
-          </select>
+        {isAdmin && (
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {/* Chọn loại văn bản tải lên */}
+            <select 
+              value={uploadFolder}
+              onChange={(e) => setUploadFolder(e.target.value)}
+              className="bg-gray-50 border border-gray-200 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="DEN">Upload vào: Văn bản đến</option>
+              <option value="DI">Upload vào: Văn bản đi</option>
+            </select>
 
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleUpload} 
-            className="hidden" 
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors whitespace-nowrap"
-          >
-            {uploading ? (
-              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-            ) : (
-              <Upload className="h-5 w-5 mr-2" />
-            )}
-            {uploading ? 'Đang xử lý...' : 'Tải file lên'}
-          </button>
-        </div>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleUpload} 
+              className="hidden" 
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors whitespace-nowrap"
+            >
+              {uploading ? (
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+              ) : (
+                <Upload className="h-5 w-5 mr-2" />
+              )}
+              {uploading ? 'Đang xử lý...' : 'Tải file lên'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Danh sách file */}

@@ -27,7 +27,7 @@ async function uploadFileToDrive(file, accessToken) {
   return await res.json(); // { id, name, webViewLink, webContentLink }
 }
 
-export default function PlansManager({ plans, setPlans, accessToken, onNeedLogin }) {
+export default function PlansManager({ plans, setPlans, accessToken, onNeedLogin, isAdmin }) {
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [pendingFile, setPendingFile] = useState(null); // file object chưa upload
@@ -77,7 +77,7 @@ export default function PlansManager({ plans, setPlans, accessToken, onNeedLogin
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
         <h2 style={{ margin: 0, fontSize: 22, color: '#1a1a2e' }}>📋 Kế hoạch hoạt động</h2>
-        <Btn onClick={() => setShowForm(true)}>+ Thêm kế hoạch</Btn>
+        {isAdmin && <Btn onClick={() => setShowForm(true)}>+ Thêm kế hoạch</Btn>}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 14 }}>
