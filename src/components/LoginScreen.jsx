@@ -1,10 +1,5 @@
 import React, { useState } from 'react';
-
-// Danh sách tài khoản - bạn có thể đổi mật khẩu ở đây
-const ACCOUNTS = [
-  { username: 'admin', password: 'admin@2025', role: 'admin', displayName: 'Ban Quản trị' },
-  { username: 'guest', password: '123456', role: 'guest', displayName: 'Khách xem' },
-];
+import { loadAccounts } from './AccountManager';
 
 export default function LoginScreen({ onLogin }) {
   const [username, setUsername] = useState('');
@@ -18,7 +13,7 @@ export default function LoginScreen({ onLogin }) {
     setLoading(true);
     setError('');
     setTimeout(() => {
-      const acc = ACCOUNTS.find(
+      const acc = loadAccounts().find(
         a => a.username === username.trim() && a.password === password
       );
       if (acc) {
