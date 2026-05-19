@@ -19,7 +19,7 @@ function AppContent() {
   const DB_FILE_NAME = 'db_quanlydoanvien.json';
 
   const [activeTab, setActiveTab] = useState('dashboard')
-  const [accessToken, setAccessToken] = useState(null)
+  const [accessToken, setAccessToken] = useState(() => localStorage.getItem('google_access_token') || null)
   
   // LocalStorage Cache System
   const [members, setMembers] = useState(() => {
@@ -57,8 +57,10 @@ function AppContent() {
   // Lấy file từ Drive khi vừa đăng nhập
   useEffect(() => {
     if (accessToken) {
+      localStorage.setItem('google_access_token', accessToken);
       downloadFromDrive();
     } else {
+      localStorage.removeItem('google_access_token');
       setSyncStatus('Chưa kết nối');
       setDriveFileId(null);
     }
@@ -71,6 +73,8 @@ function AppContent() {
       const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='${DB_FILE_NAME}' and '${FOLDER_ID}' in parents and trashed=false`, {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
+      if (searchRes.status === 401) throw new Error("TokenExpired");
+      
       const searchData = await searchRes.json();
       
       if (searchData.error) throw new Error(searchData.error.message);
@@ -98,7 +102,12 @@ function AppContent() {
       initialLoadDone.current = true;
     } catch (error) {
       console.error("Lỗi đồng bộ:", error);
-      setSyncStatus('Lỗi đồng bộ');
+      if (error.message === "TokenExpired") {
+        setAccessToken(null);
+        setSyncStatus('Chưa kết nối');
+      } else {
+        setSyncStatus('Lỗi đồng bộ');
+      }
     }
   };
 
@@ -129,6 +138,8 @@ function AppContent() {
         headers: { Authorization: `Bearer ${accessToken}` },
         body: form
       });
+      if (res.status === 401) throw new Error("TokenExpired");
+      
       const data = await res.json();
       
       if (data.error) throw new Error(data.error.message);
@@ -137,7 +148,12 @@ function AppContent() {
       setSyncStatus('Đã đồng bộ');
     } catch (error) {
       console.error("Lỗi lưu lên Drive:", error);
-      setSyncStatus('Lỗi đồng bộ');
+      if (error.message === "TokenExpired") {
+        setAccessToken(null);
+        setSyncStatus('Chưa kết nối');
+      } else {
+        setSyncStatus('Lỗi đồng bộ');
+      }
     }
   };
 
@@ -165,7 +181,7 @@ function AppContent() {
         return (
           <div className="space-y-6">
             {accessToken ? (
-              <DocumentManager accessToken={accessToken} />
+              <DocumentManager accessToken={accessToken} onTokenExpired={() => setAccessToken(null)} />
             ) : (
               <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center flex flex-col items-center">
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-50 mb-6">
