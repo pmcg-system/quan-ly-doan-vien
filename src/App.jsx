@@ -155,7 +155,7 @@ function AppContent({ currentUser, handleAppLogout }) {
       case 'members':
         return <MemberManager members={members} setMembers={setMembers} isAdmin={isAdmin} />
       case 'plans':
-        return <PlansManager plans={plans} setPlans={setPlans} accessToken={accessToken} onNeedLogin={() => setActiveTab('settings')} isAdmin={isAdmin} />
+        return <PlansManager plans={plans} setPlans={setPlans} accessToken={accessToken} onNeedLogin={() => setActiveTab('settings')} isAdmin={isAdmin} geminiApiKey={geminiApiKey} />
       case 'games':
         return isAdmin
           ? <GameManager questions={questions} setQuestions={setQuestions} geminiApiKey={geminiApiKey} onNeedSettings={() => setActiveTab('settings')} />

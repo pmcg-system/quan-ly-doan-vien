@@ -6,7 +6,7 @@ const ALL_NAV_ITEMS = [
   { id: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard, adminOnly: false },
   { id: 'members', label: 'Quản lý Đoàn viên', icon: Users, adminOnly: false },
   { id: 'documents', label: 'Quản lý Văn bản', icon: FolderOpen, adminOnly: false },
-  { id: 'plans', label: 'Kế hoạch & Công trình', icon: Calendar, adminOnly: false },
+  { id: 'plans', label: 'Kế hoạch & Báo cáo', icon: Calendar, adminOnly: false },
   { id: 'games', label: 'Trò chơi sinh hoạt', icon: Gamepad2, adminOnly: true },
   { id: 'settings', label: 'Cài đặt', icon: Settings, adminOnly: true },
 ];
