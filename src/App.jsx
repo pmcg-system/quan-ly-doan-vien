@@ -19,7 +19,17 @@ function AppContent() {
   const DB_FILE_NAME = 'db_quanlydoanvien.json';
 
   const [activeTab, setActiveTab] = useState('dashboard')
-  const [accessToken, setAccessToken] = useState(() => localStorage.getItem('google_access_token') || null)
+  const [accessToken, setAccessToken] = useState(() => {
+    const saved = localStorage.getItem('google_access_token');
+    const expiresAt = localStorage.getItem('google_token_expires_at');
+    // Token của Google thường sống được 1 tiếng (3600s)
+    if (saved && expiresAt && Date.now() < parseInt(expiresAt, 10)) {
+      return saved;
+    }
+    localStorage.removeItem('google_access_token');
+    localStorage.removeItem('google_token_expires_at');
+    return null;
+  });
   
   // LocalStorage Cache System
   const [members, setMembers] = useState(() => {
@@ -57,10 +67,8 @@ function AppContent() {
   // Lấy file từ Drive khi vừa đăng nhập
   useEffect(() => {
     if (accessToken) {
-      localStorage.setItem('google_access_token', accessToken);
       downloadFromDrive();
     } else {
-      localStorage.removeItem('google_access_token');
       setSyncStatus('Chưa kết nối');
       setDriveFileId(null);
     }
@@ -73,8 +81,11 @@ function AppContent() {
       const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='${DB_FILE_NAME}' and '${FOLDER_ID}' in parents and trashed=false`, {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
-      if (searchRes.status === 401) throw new Error("TokenExpired");
-      
+      if (searchRes.status === 401) {
+        logout();
+        alert("Phiên đăng nhập Google đã hết hạn. Vui lòng đăng nhập lại!");
+        return;
+      }
       const searchData = await searchRes.json();
       
       if (searchData.error) throw new Error(searchData.error.message);
@@ -102,12 +113,7 @@ function AppContent() {
       initialLoadDone.current = true;
     } catch (error) {
       console.error("Lỗi đồng bộ:", error);
-      if (error.message === "TokenExpired") {
-        setAccessToken(null);
-        setSyncStatus('Chưa kết nối');
-      } else {
-        setSyncStatus('Lỗi đồng bộ');
-      }
+      setSyncStatus('Lỗi đồng bộ');
     }
   };
 
@@ -138,8 +144,11 @@ function AppContent() {
         headers: { Authorization: `Bearer ${accessToken}` },
         body: form
       });
-      if (res.status === 401) throw new Error("TokenExpired");
-      
+      if (res.status === 401) {
+        logout();
+        alert("Phiên đăng nhập Google đã hết hạn. Vui lòng đăng nhập lại!");
+        return;
+      }
       const data = await res.json();
       
       if (data.error) throw new Error(data.error.message);
@@ -148,22 +157,27 @@ function AppContent() {
       setSyncStatus('Đã đồng bộ');
     } catch (error) {
       console.error("Lỗi lưu lên Drive:", error);
-      if (error.message === "TokenExpired") {
-        setAccessToken(null);
-        setSyncStatus('Chưa kết nối');
-      } else {
-        setSyncStatus('Lỗi đồng bộ');
-      }
+      setSyncStatus('Lỗi đồng bộ');
     }
   };
 
   const login = useGoogleLogin({
-    onSuccess: (codeResponse) => setAccessToken(codeResponse.access_token),
+    onSuccess: (codeResponse) => {
+      setAccessToken(codeResponse.access_token);
+      localStorage.setItem('google_access_token', codeResponse.access_token);
+      // Thời gian sống tính bằng giây (thường là 3599), trừ đi 60 giây dự phòng
+      const expiresIn = codeResponse.expires_in || 3600;
+      localStorage.setItem('google_token_expires_at', (Date.now() + (expiresIn - 60) * 1000).toString());
+    },
     onError: (error) => console.log('Login Failed:', error),
     scope: 'https://www.googleapis.com/auth/drive'
   })
 
-  const logout = () => setAccessToken(null)
+  const logout = () => {
+    setAccessToken(null);
+    localStorage.removeItem('google_access_token');
+    localStorage.removeItem('google_token_expires_at');
+  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -181,7 +195,7 @@ function AppContent() {
         return (
           <div className="space-y-6">
             {accessToken ? (
-              <DocumentManager accessToken={accessToken} onTokenExpired={() => setAccessToken(null)} />
+              <DocumentManager accessToken={accessToken} />
             ) : (
               <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center flex flex-col items-center">
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-50 mb-6">
