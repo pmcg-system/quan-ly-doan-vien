@@ -5,7 +5,7 @@ import { Upload, File as FileIcon, Download, Eye, Loader2, Trash2, Search, Plus,
 const FOLDER_DEN = import.meta.env.VITE_FOLDER_VAN_BAN_DEN;
 const FOLDER_DI = import.meta.env.VITE_FOLDER_VAN_BAN_DI;
 
-export default function DocumentManager({ accessToken, onTokenExpired }) {
+export default function DocumentManager({ accessToken }) {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -37,9 +37,6 @@ export default function DocumentManager({ accessToken, onTokenExpired }) {
       setFiles(res.data.files || []);
     } catch (error) {
       console.error('Lỗi khi lấy danh sách file:', error);
-      if (error.response && error.response.status === 401 && onTokenExpired) {
-        onTokenExpired();
-      }
     } finally {
       setLoading(false);
     }
