@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Users, FolderOpen, Calendar, Gamepad2, Settings, LogOut, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Users, FolderOpen, Calendar, Gamepad2, Settings, LogOut, ChevronRight, Wallet, CheckCircle } from 'lucide-react';
 import AccountManager from './AccountManager';
 
 const ALL_NAV_ITEMS = [
   { id: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard, adminOnly: false },
   { id: 'members', label: 'Quản lý Đoàn viên', icon: Users, adminOnly: false },
+  { id: 'funds', label: 'Quản lý Thu/Chi', icon: Wallet, adminOnly: false },
+  { id: 'attendance', label: 'Điểm danh & Đánh giá', icon: CheckCircle, adminOnly: false },
   { id: 'documents', label: 'Quản lý Văn bản', icon: FolderOpen, adminOnly: false },
   { id: 'plans', label: 'Kế hoạch & Báo cáo', icon: Calendar, adminOnly: false },
   { id: 'games', label: 'Trò chơi sinh hoạt', icon: Gamepad2, adminOnly: true },

@@ -35,11 +35,7 @@ export const EMPTY_FORM = { hoTen: "", toDoan: "Phòng ban CS1", maDinhDanh: "",
 export const RED = "#e63946", GOLD = "#f4a261", GREEN = "#2a9d8f", NAVY = "#264653", TEAL = "#a8dadc";
 export const CHART_COLORS = [RED, GOLD, GREEN, NAVY, TEAL, "#9b5de5", "#f15bb5", "#fee440"];
 
-export const INIT_PLANS = [
-  { id: 1, title: "Chiến dịch Mùa hè xanh 2024", category: "Tình nguyện", startDate: "2024-06-01", endDate: "2024-08-31", status: "Đang thực hiện", responsible: "Đặng Phong Thái", description: "Tổ chức các hoạt động tình nguyện hè, hỗ trợ vùng khó khăn." },
-  { id: 2, title: "Sinh hoạt kỷ niệm ngày thành lập Đoàn 26/3", category: "Sinh hoạt", startDate: "2024-03-20", endDate: "2024-03-26", status: "Hoàn thành", responsible: "Phạm Thị Mỹ Linh", description: "Tổ chức các hoạt động chào mừng kỷ niệm 93 năm thành lập Đoàn." },
-  { id: 3, title: "Ngày hội Thanh niên khởi nghiệp", category: "Khởi nghiệp", startDate: "2024-10-15", endDate: "2024-10-15", status: "Kế hoạch", responsible: "Đào Duy Tùng", description: "Kết nối thanh niên có ý tưởng khởi nghiệp sáng tạo." },
-];
+export const INIT_PLANS = [];
 
 export const INIT_QUESTIONS = [
   {

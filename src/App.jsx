@@ -11,6 +11,8 @@ import GameManager from './components/GameManager'
 import Settings from './components/Settings'
 import PlayerMobile from './components/PlayerMobile'
 import LoginScreen from './components/LoginScreen'
+import FundManager from './components/FundManager'
+import AttendanceManager from './components/AttendanceManager'
 import { RAW_MEMBERS, INIT_PLANS, INIT_QUESTIONS } from './data/constants'
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_CLIENT_ID_HERE'
@@ -46,6 +48,10 @@ function AppContent({ currentUser, handleAppLogout }) {
     const saved = localStorage.getItem('db_questions');
     return saved ? JSON.parse(saved) : INIT_QUESTIONS;
   })
+  const [funds, setFunds] = useState(() => {
+    const saved = localStorage.getItem('db_funds');
+    return saved ? JSON.parse(saved) : [];
+  })
   
   const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('geminiApiKey') || '')
   const [syncStatus, setSyncStatus] = useState('Chưa kết nối')
@@ -58,10 +64,11 @@ function AppContent({ currentUser, handleAppLogout }) {
     localStorage.setItem('db_members', JSON.stringify(members));
     localStorage.setItem('db_plans', JSON.stringify(plans));
     localStorage.setItem('db_questions', JSON.stringify(questions));
+    localStorage.setItem('db_funds', JSON.stringify(funds));
     if (initialLoadDone.current && accessToken && isAdmin) {
-      uploadToDrive(members, plans, questions);
+      uploadToDrive(members, plans, questions, funds);
     }
-  }, [members, plans, questions])
+  }, [members, plans, questions, funds])
 
   useEffect(() => {
     if (accessToken) {
@@ -98,10 +105,11 @@ function AppContent({ currentUser, handleAppLogout }) {
         if (dbData.members) setMembers(dbData.members);
         if (dbData.plans) setPlans(dbData.plans);
         if (dbData.questions) setQuestions(dbData.questions);
+        if (dbData.funds) setFunds(dbData.funds);
         setSyncStatus('Đã đồng bộ');
       } else {
         setSyncStatus('Tạo CSDL Đám mây...');
-        await uploadToDrive(members, plans, questions, true);
+        await uploadToDrive(members, plans, questions, funds, true);
       }
       initialLoadDone.current = true;
     } catch (error) {
@@ -110,10 +118,10 @@ function AppContent({ currentUser, handleAppLogout }) {
     }
   };
 
-  const uploadToDrive = async (m, p, q, isCreate = false) => {
+  const uploadToDrive = async (m, p, q, f, isCreate = false) => {
     setSyncStatus('Đang lưu lên Đám mây...');
     try {
-      const dbContent = JSON.stringify({ members: m, plans: p, questions: q });
+      const dbContent = JSON.stringify({ members: m, plans: p, questions: q, funds: f });
       const metadata = { name: DB_FILE_NAME, mimeType: 'application/json' };
       if (isCreate || !driveFileId) metadata.parents = [FOLDER_ID];
 
@@ -156,6 +164,10 @@ function AppContent({ currentUser, handleAppLogout }) {
         return <Dashboard members={members} />
       case 'members':
         return <MemberManager members={members} setMembers={setMembers} isAdmin={isAdmin} />
+      case 'funds':
+        return <FundManager funds={funds} setFunds={setFunds} isAdmin={isAdmin} />
+      case 'attendance':
+        return <AttendanceManager members={members} setMembers={setMembers} plans={plans} setPlans={setPlans} isAdmin={isAdmin} />
       case 'plans':
         return <PlansManager plans={plans} setPlans={setPlans} accessToken={accessToken} onNeedLogin={() => setActiveTab('settings')} isAdmin={isAdmin} geminiApiKey={geminiApiKey} />
       case 'games':

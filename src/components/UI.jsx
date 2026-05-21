@@ -57,3 +57,11 @@ export function Btn({ children, v = "p", ...p }) {
 export const SectionDivider = ({ label }) => (
   <div style={{ gridColumn: "1/-1", fontWeight: 800, fontSize: 11, color: RED, textTransform: "uppercase", letterSpacing: 1, borderBottom: `2px solid ${RED}22`, paddingBottom: 4, marginTop: 10, marginBottom: 2 }}>{label}</div>
 );
+
+export function Th({ children, className = "" }) {
+  return <th className={`p-4 text-sm font-bold text-gray-600 border-b border-gray-100 ${className}`}>{children}</th>;
+}
+
+export function Td({ children, className = "" }) {
+  return <td className={`p-4 text-sm text-gray-800 ${className}`}>{children}</td>;
+}
