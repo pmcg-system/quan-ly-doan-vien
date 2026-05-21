@@ -87,6 +87,7 @@ export default function PlansManager({ plans, setPlans, accessToken, onNeedLogin
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [pendingFile, setPendingFile] = useState(null); // file object chưa upload
+  const [editingPlan, setEditingPlan] = useState(null); // plan đang sửa
   const [form, setForm] = useState({
     title: '', category: 'Sinh hoạt', startDate: '', endDate: '',
     status: 'Kế hoạch', responsible: '', description: '', attachment: null
@@ -166,6 +167,17 @@ export default function PlansManager({ plans, setPlans, accessToken, onNeedLogin
     if (window.confirm("Bạn có chắc chắn muốn xóa kế hoạch này? (Lưu ý: Không thể khôi phục)")) {
       setPlans(prev => prev.filter(p => p.id !== id));
     }
+  };
+
+  const handleOpenEdit = (plan) => {
+    if (!isAdmin) return;
+    setEditingPlan({ ...plan });
+  };
+
+  const handleUpdatePlan = () => {
+    if (!editingPlan || !editingPlan.title) return;
+    setPlans(prev => prev.map(p => p.id === editingPlan.id ? editingPlan : p));
+    setEditingPlan(null);
   };
 
   // Hàm sinh tiêu đề 2 bên dạng plain-text căn lề bằng khoảng trắng
@@ -645,15 +657,24 @@ Yêu cầu: Hãy tối ưu hóa từ ngữ cho thật chuyên nghiệp, súc tí
               <div key={p.id} style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
                 <div style={{ background: cc[p.category] || RED, padding: '14px 18px', color: '#fff', position: 'relative' }}>
                   <div style={{ fontSize: 11, opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>{p.category}</div>
-                  <div style={{ fontWeight: 700, fontSize: 15, marginTop: 4, lineHeight: 1.4, paddingRight: 24 }}>{p.title}</div>
+                  <div style={{ fontWeight: 700, fontSize: 15, marginTop: 4, lineHeight: 1.4, paddingRight: 56 }}>{p.title}</div>
                   {isAdmin && (
-                    <button 
-                      onClick={() => handleDeletePlan(p.id)}
-                      className="absolute top-3 right-3 p-1.5 bg-white/20 hover:bg-white/40 rounded-lg transition-colors cursor-pointer text-white"
-                      title="Xóa kế hoạch"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="absolute top-3 right-3 flex gap-1">
+                      <button
+                        onClick={() => handleOpenEdit(p)}
+                        className="p-1.5 bg-white/20 hover:bg-white/40 rounded-lg transition-colors cursor-pointer text-white"
+                        title="Sửa kế hoạch"
+                      >
+                        <Edit3 size={15} />
+                      </button>
+                      <button
+                        onClick={() => handleDeletePlan(p.id)}
+                        className="p-1.5 bg-white/20 hover:bg-white/40 rounded-lg transition-colors cursor-pointer text-white"
+                        title="Xóa kế hoạch"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   )}
                 </div>
                 <div style={{ padding: 16 }}>
@@ -670,22 +691,8 @@ Yêu cầu: Hãy tối ưu hóa từ ngữ cho thật chuyên nghiệp, súc tí
                         <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.attachment.name}</span>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <a
-                          href={p.attachment.viewUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{ fontSize: 11, padding: '5px 12px', background: '#f0f0f0', color: '#333', borderRadius: 6, textDecoration: 'none', fontWeight: 700 }}
-                        >
-                          👁 Xem
-                        </a>
-                        <a
-                          href={p.attachment.downloadUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{ fontSize: 11, padding: '5px 12px', background: '#eef2ff', color: '#4f46e5', borderRadius: 6, textDecoration: 'none', fontWeight: 700 }}
-                        >
-                          ⬇ Tải về
-                        </a>
+                        <a href={p.attachment.viewUrl} target="_blank" rel="noreferrer" style={{ fontSize: 11, padding: '5px 12px', background: '#f0f0f0', color: '#333', borderRadius: 6, textDecoration: 'none', fontWeight: 700 }}>👁 Xem</a>
+                        <a href={p.attachment.downloadUrl} target="_blank" rel="noreferrer" style={{ fontSize: 11, padding: '5px 12px', background: '#eef2ff', color: '#4f46e5', borderRadius: 6, textDecoration: 'none', fontWeight: 700 }}>⬇ Tải về</a>
                       </div>
                     </div>
                   )}
@@ -705,40 +712,41 @@ Yêu cầu: Hãy tối ưu hóa từ ngữ cho thật chuyên nghiệp, súc tí
               <FS label="Trạng thái" opts={['Kế hoạch', 'Đang thực hiện', 'Hoàn thành']} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} />
               <FI label="Người phụ trách" value={form.responsible} onChange={e => setForm({ ...form, responsible: e.target.value })} />
               <FT label="Mô tả" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
-
-              {/* File Upload */}
               <div style={{ marginBottom: 11 }}>
-                <label style={{ display: 'block', marginBottom: 6, fontSize: 11, fontWeight: 700, color: '#666', textTransform: 'uppercase', letterSpacing: 0.4 }}>
-                  Đính kèm tệp tin (Google Drive)
-                </label>
+                <label style={{ display: 'block', marginBottom: 6, fontSize: 11, fontWeight: 700, color: '#666', textTransform: 'uppercase', letterSpacing: 0.4 }}>Đính kèm tệp tin (Google Drive)</label>
                 {!accessToken ? (
                   <div style={{ padding: '10px 14px', border: '1.5px dashed #f4a261', borderRadius: 8, background: '#fffbf5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: 12, color: '#888' }}>⚠️ Cần đăng nhập Google để đính kèm file lên Drive</span>
-                    <button onClick={() => { setShowForm(false); onNeedLogin(); }} style={{ fontSize: 11, padding: '4px 12px', background: '#4285F4', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}>
-                      Đi tới Cài đặt
-                    </button>
+                    <button onClick={() => { setShowForm(false); onNeedLogin(); }} style={{ fontSize: 11, padding: '4px 12px', background: '#4285F4', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}>Đi tới Cài đặt</button>
                   </div>
                 ) : (
                   <div style={{ border: '1.5px dashed #ccc', borderRadius: 8, background: '#fafafa', padding: '10px 14px' }}>
-                    <input
-                      type="file"
-                      onChange={e => setPendingFile(e.target.files[0] || null)}
-                      style={{ fontSize: 13, width: '100%' }}
-                    />
-                    {pendingFile && (
-                      <div style={{ marginTop: 6, fontSize: 12, color: '#34A853', fontWeight: 600 }}>
-                        ✅ Đã chọn: {pendingFile.name} ({(pendingFile.size / 1024).toFixed(1)} KB) — Sẽ tải lên Drive khi Lưu
-                      </div>
-                    )}
+                    <input type="file" onChange={e => setPendingFile(e.target.files[0] || null)} style={{ fontSize: 13, width: '100%' }} />
+                    {pendingFile && <div style={{ marginTop: 6, fontSize: 12, color: '#34A853', fontWeight: 600 }}>✅ Đã chọn: {pendingFile.name} ({(pendingFile.size / 1024).toFixed(1)} KB) — Sẽ tải lên Drive khi Lưu</div>}
                   </div>
                 )}
               </div>
-
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 14, paddingTop: 10, borderTop: '1px solid #eee' }}>
                 <Btn v="s" onClick={() => { setShowForm(false); resetForm(); }}>Hủy</Btn>
-                <Btn onClick={handleSave} disabled={uploading}>
-                  {uploading ? '⏳ Đang tải lên Drive...' : '💾 Lưu kế hoạch'}
-                </Btn>
+                <Btn onClick={handleSave} disabled={uploading}>{uploading ? '⏳ Đang tải lên Drive...' : '💾 Lưu kế hoạch'}</Btn>
+              </div>
+            </Modal>
+          )}
+
+          {editingPlan && (
+            <Modal title="✏️ Chỉnh sửa kế hoạch" onClose={() => setEditingPlan(null)}>
+              <FI label="Tên hoạt động *" value={editingPlan.title} onChange={e => setEditingPlan({ ...editingPlan, title: e.target.value })} />
+              <FS label="Danh mục" opts={['Sinh hoạt', 'Tình nguyện', 'Khởi nghiệp', 'Giáo dục', 'Thể thao']} value={editingPlan.category} onChange={e => setEditingPlan({ ...editingPlan, category: e.target.value })} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <FI label="Ngày bắt đầu" type="date" value={editingPlan.startDate} onChange={e => setEditingPlan({ ...editingPlan, startDate: e.target.value })} />
+                <FI label="Ngày kết thúc" type="date" value={editingPlan.endDate} onChange={e => setEditingPlan({ ...editingPlan, endDate: e.target.value })} />
+              </div>
+              <FS label="Trạng thái" opts={['Kế hoạch', 'Đang thực hiện', 'Hoàn thành']} value={editingPlan.status} onChange={e => setEditingPlan({ ...editingPlan, status: e.target.value })} />
+              <FI label="Người phụ trách" value={editingPlan.responsible} onChange={e => setEditingPlan({ ...editingPlan, responsible: e.target.value })} />
+              <FT label="Mô tả" value={editingPlan.description} onChange={e => setEditingPlan({ ...editingPlan, description: e.target.value })} />
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 14, paddingTop: 10, borderTop: '1px solid #eee' }}>
+                <Btn v="s" onClick={() => setEditingPlan(null)}>Hủy</Btn>
+                <Btn onClick={handleUpdatePlan}>💾 Lưu thay đổi</Btn>
               </div>
             </Modal>
           )}

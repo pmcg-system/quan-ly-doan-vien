@@ -210,18 +210,19 @@ function AppContent({ currentUser, handleAppLogout }) {
   }
 
   return (
-    <div className="flex bg-gray-50 min-h-screen">
+    <div className="flex min-h-screen" style={{ background: '#f0f2f8' }}>
       {sessionExpired && (
-        <div className="fixed top-0 left-64 right-0 z-[100] bg-red-500 text-white p-3 flex justify-center items-center gap-4 shadow-md">
-          <span className="font-semibold text-sm">⚠️ Phiên kết nối máy chủ Google Drive đã hết hạn (sau 1 tiếng). Không thể tự động lưu dữ liệu lúc này.</span>
-          <button onClick={() => login()} className="bg-white text-red-600 px-4 py-1.5 rounded-lg font-bold text-sm hover:bg-gray-100 shadow-sm transition-colors cursor-pointer">
+        <div className="fixed top-0 left-64 right-0 z-[100] text-white p-3 flex justify-center items-center gap-4 shadow-lg"
+          style={{ background: 'linear-gradient(90deg, #c8102e, #a50d24)' }}>
+          <span className="font-semibold text-sm">⚠️ Phiên kết nối Google Drive đã hết hạn. Không thể tự động lưu dữ liệu lúc này.</span>
+          <button onClick={() => login()} className="bg-white text-red-700 px-4 py-1.5 rounded-lg font-bold text-sm hover:bg-gray-100 shadow-sm transition-colors cursor-pointer">
             Gia hạn kết nối ngay
           </button>
         </div>
       )}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} currentUser={currentUser} onAppLogout={handleAppLogout} />
       <div className="flex-1 ml-64 p-8">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto animate-fade-in-up">
           {renderContent()}
         </div>
       </div>

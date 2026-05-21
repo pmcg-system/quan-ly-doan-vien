@@ -1,7 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 font-sans antialiased;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    @apply antialiased;
+    background: #f0f2f8;
   }
 }
+
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fadeInUp 0.35s ease both;
+  }
+  .animate-fade-in-down {
+    animation: fadeInDown 0.25s ease both;
+  }
+  .animate-pulse-slow {
+    animation: pulse 3s infinite;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* Scrollbar tùy chỉnh */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
