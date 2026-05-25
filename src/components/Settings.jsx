@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Btn, SectionDivider } from './UI';
+import { API_URL, RAW_MEMBERS, INIT_PLANS, INIT_QUESTIONS } from '../data/constants';
 
 export default function Settings({ geminiApiKey, setGeminiApiKey, syncStatus }) {
   return (
@@ -10,28 +11,6 @@ export default function Settings({ geminiApiKey, setGeminiApiKey, syncStatus }) 
       </div>
 
       <div style={{ maxWidth: 720 }}>
-
-        {/* CSDL API Status Card */}
-        <div style={{ background: "#fff", borderRadius: 16, padding: "24px 28px", boxShadow: "0 2px 12px rgba(0,0,0,0.07)", marginBottom: 18 }}>
-          <SectionDivider label="Kết nối Cơ sở dữ liệu đám mây" />
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg,#00b4d8,#0077b6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 20 }}>☁️</div>
-              <div>
-                <div style={{ fontWeight: 700, color: "#1a1a2e", fontSize: 15 }}>Hệ thống Google Apps Script API</div>
-                <div style={{ fontSize: 12, color: syncStatus.includes('Lỗi') ? '#dc2626' : '#0077b6', fontWeight: 600, marginTop: 2 }}>
-                  Trạng thái: {syncStatus}
-                </div>
-              </div>
-            </div>
-            <button
-                onClick={() => window.location.reload()}
-                style={{ padding: "8px 18px", borderRadius: 9, border: "none", background: "#e0f2fe", color: "#0284c7", fontWeight: 700, cursor: "pointer", fontSize: 13 }}
-              >
-                Đồng bộ lại
-            </button>
-          </div>
-        </div>
 
         {/* CSDL API Status Card */}
         <div style={{ background: "#fff", borderRadius: 16, padding: "24px 28px", boxShadow: "0 2px 12px rgba(0,0,0,0.07)", marginBottom: 18 }}>
@@ -93,24 +72,97 @@ export default function Settings({ geminiApiKey, setGeminiApiKey, syncStatus }) 
         {/* Data Management */}
         <div style={{ background: "#fff", borderRadius: 16, padding: "24px 28px", boxShadow: "0 2px 12px rgba(0,0,0,0.07)", marginBottom: 18 }}>
           <SectionDivider label="Quản lý Dữ liệu" />
-          {[
-            { label: "Sao lưu dữ liệu (Export)", desc: "Tải xuống toàn bộ dữ liệu hiện tại về máy tính", btn: "Tải xuống bản sao lưu", v: "s" },
-            { label: "Phục hồi dữ liệu (Import)", desc: "Khôi phục hệ thống từ file sao lưu trước đó", btn: "Chọn file sao lưu", v: "s" },
-          ].map(item => (
-            <div key={item.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f5f5f5" }}>
-              <div>
-                <div style={{ fontWeight: 700, color: "#1a1a2e", fontSize: 14 }}>{item.label}</div>
-                <div style={{ fontSize: 12, color: "#aaa", marginTop: 2 }}>{item.desc}</div>
-              </div>
-              <Btn v={item.v} onClick={() => alert("Tính năng đang được phát triển!")}>{item.btn}</Btn>
+          
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f5f5f5" }}>
+            <div>
+              <div style={{ fontWeight: 700, color: "#1a1a2e", fontSize: 14 }}>Sao lưu dữ liệu (Export)</div>
+              <div style={{ fontSize: 12, color: "#aaa", marginTop: 2 }}>Tải xuống toàn bộ dữ liệu hiện tại về máy tính dưới định dạng JSON</div>
             </div>
-          ))}
+            <Btn v="s" onClick={async () => {
+              try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `backup_quanlydoanvien_${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+              } catch (e) {
+                alert("Lỗi khi tải dữ liệu sao lưu: " + e.message);
+              }
+            }}>Tải xuống bản sao lưu</Btn>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f5f5f5" }}>
+            <div>
+              <div style={{ fontWeight: 700, color: "#1a1a2e", fontSize: 14 }}>Phục hồi dữ liệu (Import)</div>
+              <div style={{ fontSize: 12, color: "#aaa", marginTop: 2 }}>Khôi phục hệ thống từ file JSON sao lưu trước đó</div>
+            </div>
+            <label style={{ display: "inline-flex", alignItems: "center", padding: "8px 18px", borderRadius: 9, border: "none", background: "#e0f2fe", color: "#0284c7", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
+              Chọn file sao lưu
+              <input 
+                type="file" 
+                accept=".json" 
+                style={{ display: "none" }} 
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  if (window.confirm("Cảnh báo: Dữ liệu hiện tại sẽ bị GHI ĐÈ hoàn toàn bởi file này. Bạn có chắc chắn?")) {
+                    const reader = new FileReader();
+                    reader.onload = async (evt) => {
+                      try {
+                        const content = JSON.parse(evt.target.result);
+                        if (!content.members) throw new Error("File không đúng định dạng sao lưu.");
+                        
+                        alert("Đang đồng bộ dữ liệu lên máy chủ, vui lòng đợi vài giây...");
+                        await fetch(API_URL, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                          body: JSON.stringify(content)
+                        });
+                        alert("Phục hồi thành công! Trình duyệt sẽ tải lại.");
+                        window.location.reload();
+                      } catch (err) {
+                        alert("Lỗi phục hồi: " + err.message);
+                      }
+                    };
+                    reader.readAsText(file);
+                  }
+                  e.target.value = '';
+                }} 
+              />
+            </label>
+          </div>
+
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 14 }}>
             <div>
               <div style={{ fontWeight: 700, color: "#c1121f", fontSize: 14 }}>Khôi phục cài đặt gốc</div>
-              <div style={{ fontSize: 12, color: "#aaa", marginTop: 2 }}>Xóa trắng toàn bộ dữ liệu. Thao tác này không thể hoàn tác!</div>
+              <div style={{ fontSize: 12, color: "#aaa", marginTop: 2 }}>Xóa trắng toàn bộ dữ liệu (trở về trạng thái ban đầu). Thao tác này không thể hoàn tác!</div>
             </div>
-            <Btn v="d" onClick={() => window.confirm("Bạn có chắc chắn muốn xóa toàn bộ dữ liệu không?")}>Xóa dữ liệu</Btn>
+            <Btn v="d" onClick={async () => {
+              if (window.confirm("CẢNH BÁO NGUY HIỂM: \nBạn có chắc chắn muốn XÓA TRẮNG toàn bộ dữ liệu hệ thống (Đoàn viên, Kế hoạch, Quỹ, Trắc nghiệm) không?")) {
+                if (window.confirm("Thao tác này KHÔNG THỂ HOÀN TÁC! Bạn có thực sự muốn xóa?")) {
+                  try {
+                    const emptyData = {
+                      members: RAW_MEMBERS,
+                      plans: INIT_PLANS,
+                      questions: INIT_QUESTIONS,
+                      funds: []
+                    };
+                    await fetch(API_URL, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                      body: JSON.stringify(emptyData)
+                    });
+                    alert("Đã khôi phục cài đặt gốc thành công! Trình duyệt sẽ tải lại.");
+                    window.location.reload();
+                  } catch (e) {
+                    alert("Lỗi khi xóa dữ liệu: " + e.message);
+                  }
+                }
+              }
+            }}>Xóa dữ liệu</Btn>
           </div>
         </div>
 
