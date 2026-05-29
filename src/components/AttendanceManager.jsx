@@ -33,11 +33,11 @@ export default function AttendanceManager({ members, setMembers, plans, setPlans
     setMembers(newMembers);
   };
 
-  const getAttendanceCount = (memberId) => {
-    return plans.filter(p => p.attendees && p.attendees.includes(memberId)).length;
-  };
+  const isInactive = (m) => m.trangThai && m.trangThai !== 'active' && m.trangThai !== 'chuyen_den';
 
-  const filteredMembers = members.filter(m => m.hoTen.toLowerCase().includes(searchQuery.toLowerCase()) || m.toDoan.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredMembers = members
+    .filter(m => !isInactive(m))
+    .filter(m => m.hoTen.toLowerCase().includes(searchQuery.toLowerCase()) || m.toDoan.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -87,7 +87,7 @@ export default function AttendanceManager({ members, setMembers, plans, setPlans
                 </div>
                 <div className="w-full md:w-auto text-center md:text-right">
                   <div className="text-sm text-gray-500">Số người tham gia:</div>
-                  <div className="text-2xl font-bold text-blue-600">{planAttendees.length} / {members.length}</div>
+                  <div className="text-2xl font-bold text-blue-600">{planAttendees.length} / {members.filter(m => !isInactive(m)).length}</div>
                 </div>
               </div>
 
@@ -149,7 +149,7 @@ export default function AttendanceManager({ members, setMembers, plans, setPlans
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <span className="text-sm text-gray-500 font-medium bg-gray-100 px-3 py-1 rounded-full">Tổng: {members.length} đoàn viên</span>
+              <span className="text-sm text-gray-500 font-medium bg-gray-100 px-3 py-1 rounded-full">Tổng: {members.filter(m => !isInactive(m)).length} đoàn viên đang sinh hoạt</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -163,7 +163,7 @@ export default function AttendanceManager({ members, setMembers, plans, setPlans
                 </thead>
                 <tbody>
                   {filteredMembers.map(m => {
-                    const count = getAttendanceCount(m.id);
+                    const count = getAttendanceCount(m.id, plans);
                     return (
                       <tr key={m.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                         <Td><span className="font-bold text-gray-800">{m.hoTen}</span></Td>
@@ -203,4 +203,9 @@ export default function AttendanceManager({ members, setMembers, plans, setPlans
       )}
     </div>
   );
+}
+
+// Bổ sung hàm getAttendanceCount ở cuối file
+function getAttendanceCount(memberId, plans) {
+  return plans.filter(p => p.attendees && p.attendees.includes(memberId)).length;
 }
