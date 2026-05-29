@@ -101,6 +101,7 @@ export default function PlansManager({ plans, setPlans, isAdmin, geminiApiKey, c
   const [uploading, setUploading] = useState(false);
   const [pendingFile, setPendingFile] = useState(null); // file object chưa upload
   const [editingPlan, setEditingPlan] = useState(null); // plan đang sửa
+  const [editPendingFile, setEditPendingFile] = useState(null); // file đính kèm mới khi sửa
   const [form, setForm] = useState({
     title: '', category: 'Sinh hoạt', startDate: '', endDate: '',
     status: 'Kế hoạch', responsible: '', description: '', attachment: null
@@ -181,12 +182,31 @@ export default function PlansManager({ plans, setPlans, isAdmin, geminiApiKey, c
   const handleOpenEdit = (plan) => {
     if (!isAdmin) return;
     setEditingPlan({ ...plan });
+    setEditPendingFile(null);
   };
 
-  const handleUpdatePlan = () => {
+  const handleUpdatePlan = async () => {
     if (!editingPlan || !editingPlan.title) return;
-    setPlans(prev => prev.map(p => p.id === editingPlan.id ? editingPlan : p));
-    setEditingPlan(null);
+    setUploading(true);
+    const config = getBranchConfig(currentUser?.username);
+    try {
+      let attachment = editingPlan.attachment;
+      if (editPendingFile) {
+        const uploadedObj = await uploadFileToDrive(editPendingFile, config.folderKeHoach, config.apiUrl);
+        attachment = {
+          name: uploadedObj.name,
+          fileId: uploadedObj.id,
+          viewUrl: uploadedObj.webViewLink,
+        };
+      }
+      setPlans(prev => prev.map(p => p.id === editingPlan.id ? { ...editingPlan, attachment } : p));
+      setEditingPlan(null);
+      setEditPendingFile(null);
+    } catch (err) {
+      alert('Lỗi tải file lên Drive: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   // Hàm sinh tiêu đề 2 bên dạng plain-text căn lề bằng khoảng trắng
@@ -713,7 +733,6 @@ Yêu cầu: Hãy tối ưu hóa từ ngữ cho thật chuyên nghiệp, súc tí
           {showForm && (
             <Modal title="Thêm kế hoạch mới" onClose={() => { setShowForm(false); resetForm(); }}>
               <FI label="Tên hoạt động *" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Nhập tên hoạt động..." />
-              <FS label="Danh mục" opts={['Sinh hoạt', 'Tình nguyện', 'Khởi nghiệp', 'Giáo dục', 'Thể thao']} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <FI label="Ngày bắt đầu" type="date" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} />
                 <FI label="Ngày kết thúc" type="date" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} />
@@ -734,11 +753,10 @@ Yêu cầu: Hãy tối ưu hóa từ ngữ cho thật chuyên nghiệp, súc tí
               </div>
             </Modal>
           )}
-
+ 
           {editingPlan && (
             <Modal title="✏️ Chỉnh sửa kế hoạch" onClose={() => setEditingPlan(null)}>
               <FI label="Tên hoạt động *" value={editingPlan.title} onChange={e => setEditingPlan({ ...editingPlan, title: e.target.value })} />
-              <FS label="Danh mục" opts={['Sinh hoạt', 'Tình nguyện', 'Khởi nghiệp', 'Giáo dục', 'Thể thao']} value={editingPlan.category} onChange={e => setEditingPlan({ ...editingPlan, category: e.target.value })} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <FI label="Ngày bắt đầu" type="date" value={editingPlan.startDate} onChange={e => setEditingPlan({ ...editingPlan, startDate: e.target.value })} />
                 <FI label="Ngày kết thúc" type="date" value={editingPlan.endDate} onChange={e => setEditingPlan({ ...editingPlan, endDate: e.target.value })} />
@@ -746,9 +764,25 @@ Yêu cầu: Hãy tối ưu hóa từ ngữ cho thật chuyên nghiệp, súc tí
               <FS label="Trạng thái" opts={['Kế hoạch', 'Đang thực hiện', 'Hoàn thành']} value={editingPlan.status} onChange={e => setEditingPlan({ ...editingPlan, status: e.target.value })} />
               <FI label="Người phụ trách" value={editingPlan.responsible} onChange={e => setEditingPlan({ ...editingPlan, responsible: e.target.value })} />
               <FT label="Mô tả" value={editingPlan.description} onChange={e => setEditingPlan({ ...editingPlan, description: e.target.value })} />
+              
+              {editingPlan.status !== 'Hoàn thành' && (
+                <div style={{ marginBottom: 11 }}>
+                  <label style={{ display: 'block', marginBottom: 6, fontSize: 11, fontWeight: 700, color: '#666', textTransform: 'uppercase', letterSpacing: 0.4 }}>Cập nhật đính kèm tệp tin (Google Drive)</label>
+                  {editingPlan.attachment && (
+                    <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 6 }}>
+                      Tệp hiện tại: <span style={{ fontWeight: 600 }}>{editingPlan.attachment.name}</span>
+                    </div>
+                  )}
+                  <div style={{ border: '1.5px dashed #ccc', borderRadius: 8, background: '#fafafa', padding: '10px 14px' }}>
+                    <input type="file" onChange={e => setEditPendingFile(e.target.files[0] || null)} style={{ fontSize: 13, width: '100%' }} />
+                    {editPendingFile && <div style={{ marginTop: 6, fontSize: 12, color: '#34A853', fontWeight: 600 }}>✅ Đã chọn: {editPendingFile.name} ({(editPendingFile.size / 1024).toFixed(1)} KB) — Sẽ tải lên Drive khi Lưu</div>}
+                  </div>
+                </div>
+              )}
+
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 14, paddingTop: 10, borderTop: '1px solid #eee' }}>
                 <Btn v="s" onClick={() => setEditingPlan(null)}>Hủy</Btn>
-                <Btn onClick={handleUpdatePlan}>💾 Lưu thay đổi</Btn>
+                <Btn onClick={handleUpdatePlan} disabled={uploading}>{uploading ? '⏳ Đang tải lên Drive...' : '💾 Lưu thay đổi'}</Btn>
               </div>
             </Modal>
           )}

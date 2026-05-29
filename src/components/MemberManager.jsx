@@ -1,10 +1,51 @@
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
-import { Avatar, Badge, Modal, FG, FI, FS, FT, Btn, SectionDivider } from './UI';
+import { Avatar, Badge, Modal, FG, FI, FS, FT, Btn, SectionDivider, inputStyle } from './UI';
 import { RED, TO_DOAN_LIST, DAN_TOC_LIST, TON_GIAO_LIST, TRINH_DO_VH_LIST, TRINH_DO_CM_LIST, TRINH_DO_LLCT_LIST, TIN_HOC_LIST, NGOAI_NGU_LIST, CHUC_VU_LIST, DOI_TUONG_LIST, REN_LUYEN_LIST, XEP_LOAI_LIST, HOI_LIST, EMPTY_FORM, TRANG_THAI_DV } from '../data/constants';
 
 const STATUS_LABEL = { chuyen_di: 'Chuyển đi', chuyen_den: 'Chuyển đến', truong_thanh: 'Trưởng thành Đoàn', xoa_ten: 'Xóa tên', active: 'Đang sinh hoạt' };
 const STATUS_COLOR = { chuyen_di: '#f97316', truong_thanh: '#8b5cf6', xoa_ten: '#e63946', chuyen_den: '#16a34a', active: '#2a9d8f' };
+
+function CustomSelect({ label, opts, value, onChange, placeholder = "Tự nhập mục khác..." }) {
+  const isCustom = value !== undefined && value !== null && value !== "" && !opts.includes(value);
+  const selectValue = isCustom ? "Khác..." : value;
+
+  const handleSelectChange = (e) => {
+    const val = e.target.value;
+    if (val === "Khác...") {
+      onChange({ target: { value: " " } }); // Sử dụng một khoảng trắng tạm thời để kích hoạt input tự nhập
+    } else {
+      onChange({ target: { value: val } });
+    }
+  };
+
+  return (
+    <FG label={label}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <select
+          style={inputStyle}
+          value={selectValue}
+          onChange={handleSelectChange}
+        >
+          {opts.map(o => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+          <option value="Khác...">📝 Tự nhập mục khác...</option>
+        </select>
+        {(isCustom || selectValue === "Khác...") ? (
+          <input
+            type="text"
+            style={inputStyle}
+            value={value === " " ? "" : value}
+            onChange={onChange}
+            placeholder={placeholder}
+            autoFocus
+          />
+        ) : null}
+      </div>
+    </FG>
+  );
+}
 
 function MemberForm({ initial, onSave, onClose }) {
   const [f, setF] = useState(initial ? { ...initial } : { ...EMPTY_FORM });
@@ -14,12 +55,12 @@ function MemberForm({ initial, onSave, onClose }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2px 14px", maxHeight: "72vh", overflowY: "auto", paddingRight: 6 }}>
         <SectionDivider label="I. Thông tin cá nhân" />
         <FI label="Họ và tên *" value={f.hoTen} onChange={upd("hoTen")} placeholder="Nguyễn Văn A" />
-        <FS label="Tổ đoàn *" opts={TO_DOAN_LIST} value={f.toDoan} onChange={upd("toDoan")} />
+        <CustomSelect label="Tổ đoàn *" opts={TO_DOAN_LIST} value={f.toDoan} onChange={upd("toDoan")} placeholder="Nhập tên tổ đoàn/phòng ban..." />
         <FS label="Giới tính" opts={["Nam", "Nữ"]} value={f.gioiTinh} onChange={upd("gioiTinh")} />
         <FI label="Ngày sinh" type="date" value={f.ngaySinh} onChange={upd("ngaySinh")} />
         <FI label="Tuổi" type="number" value={f.tuoi} onChange={upd("tuoi")} min={16} max={35} />
-        <FS label="Dân tộc" opts={DAN_TOC_LIST} value={f.danToc} onChange={upd("danToc")} />
-        <FS label="Tôn giáo" opts={TON_GIAO_LIST} value={f.tonGiao} onChange={upd("tonGiao")} />
+        <CustomSelect label="Dân tộc" opts={DAN_TOC_LIST} value={f.danToc} onChange={upd("danToc")} />
+        <CustomSelect label="Tôn giáo" opts={TON_GIAO_LIST} value={f.tonGiao} onChange={upd("tonGiao")} />
         <FI label="Điện thoại" value={f.dienThoai} onChange={upd("dienThoai")} placeholder="09xxxxxxxx" />
         <FI label="Email" type="email" value={f.email} onChange={upd("email")} placeholder="abc@gmail.com" />
         <div style={{ gridColumn: "1/-1" }}><FT label="Quê quán" value={f.queQuan} onChange={upd("queQuan")} placeholder="Xã/phường, Huyện/quận, Tỉnh/thành" /></div>
@@ -33,11 +74,11 @@ function MemberForm({ initial, onSave, onClose }) {
         <FI label="Số thẻ đoàn" value={f.soThe} onChange={upd("soThe")} />
 
         <SectionDivider label="III. Trình độ" />
-        <FS label="Trình độ văn hóa" opts={TRINH_DO_VH_LIST} value={f.trinhDoVH} onChange={upd("trinhDoVH")} />
-        <FS label="Trình độ chuyên môn" opts={TRINH_DO_CM_LIST} value={f.trinhDoCM} onChange={upd("trinhDoCM")} />
-        <FS label="Trình độ lý luận chính trị" opts={TRINH_DO_LLCT_LIST} value={f.trinhDoLLCT} onChange={upd("trinhDoLLCT")} />
-        <FS label="Tin học" opts={TIN_HOC_LIST} value={f.tinHoc} onChange={upd("tinHoc")} />
-        <FS label="Ngoại ngữ" opts={NGOAI_NGU_LIST} value={f.ngoaiNgu} onChange={upd("ngoaiNgu")} />
+        <CustomSelect label="Trình độ văn hóa" opts={TRINH_DO_VH_LIST} value={f.trinhDoVH} onChange={upd("trinhDoVH")} />
+        <CustomSelect label="Trình độ chuyên môn" opts={TRINH_DO_CM_LIST} value={f.trinhDoCM} onChange={upd("trinhDoCM")} />
+        <CustomSelect label="Trình độ lý luận chính trị" opts={TRINH_DO_LLCT_LIST} value={f.trinhDoLLCT} onChange={upd("trinhDoLLCT")} />
+        <CustomSelect label="Tin học" opts={TIN_HOC_LIST} value={f.tinHoc} onChange={upd("tinHoc")} />
+        <CustomSelect label="Ngoại ngữ" opts={NGOAI_NGU_LIST} value={f.ngoaiNgu} onChange={upd("ngoaiNgu")} />
         <FI label="Nghề nghiệp hiện nay" value={f.ngheNghiep} onChange={upd("ngheNghiep")} />
 
         <SectionDivider label="IV. Thông tin Đoàn - Đảng" />
@@ -47,13 +88,13 @@ function MemberForm({ initial, onSave, onClose }) {
         <FI label="Thời gian vào Đảng" value={f.tgVaoDang} onChange={upd("tgVaoDang")} placeholder="dd/mm/yyyy hoặc năm" />
 
         <SectionDivider label="V. Phân loại & Đánh giá" />
-        <FS label="Chức vụ trong chi đoàn" opts={CHUC_VU_LIST} value={f.chucVu} onChange={upd("chucVu")} />
-        <FS label="Đối tượng đoàn viên" opts={DOI_TUONG_LIST} value={f.doiTuong} onChange={upd("doiTuong")} />
-        <FS label="Rèn luyện đoàn viên" opts={REN_LUYEN_LIST} value={f.renLuyen} onChange={upd("renLuyen")} />
-        <FS label="Đánh giá, xếp loại" opts={XEP_LOAI_LIST} value={f.xepLoai} onChange={upd("xepLoai")} />
+        <CustomSelect label="Chức vụ trong chi đoàn" opts={CHUC_VU_LIST} value={f.chucVu} onChange={upd("chucVu")} />
+        <CustomSelect label="Đối tượng đoàn viên" opts={DOI_TUONG_LIST} value={f.doiTuong} onChange={upd("doiTuong")} />
+        <CustomSelect label="Rèn luyện đoàn viên" opts={REN_LUYEN_LIST} value={f.renLuyen} onChange={upd("renLuyen")} />
+        <CustomSelect label="Đánh giá, xếp loại" opts={XEP_LOAI_LIST} value={f.xepLoai} onChange={upd("xepLoai")} />
         <FS label="Khen thưởng" opts={["Không", "Có"]} value={f.khenThuong} onChange={upd("khenThuong")} />
         <FS label="Kỷ luật" opts={["Không", "Có"]} value={f.kyLuat} onChange={upd("kyLuat")} />
-        <FS label="Hội" opts={HOI_LIST} value={f.hoi} onChange={upd("hoi")} />
+        <CustomSelect label="Hội" opts={HOI_LIST} value={f.hoi} onChange={upd("hoi")} />
       </div>
       <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 14, paddingTop: 14, borderTop: "1px solid #eee" }}>
         <Btn v="s" onClick={onClose}>Hủy</Btn>
