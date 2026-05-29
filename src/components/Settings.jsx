@@ -259,9 +259,9 @@ export default function Settings({ geminiApiKey, setGeminiApiKey, syncStatus, cu
           <SectionDivider label="Thông tin hệ thống" />
           <div style={{ paddingTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
             {[
-              ["Phiên bản", "v1.0.0"],
-              ["Nhà phát triển", "Antigravity AI"],
-              ["Đơn vị sử dụng", "Chi đoàn Trung tâm y tế Than khu vực Mạo Khê"],
+              ["Phiên bản", "v2.0"],
+              ["Nhà phát triển", "BS Thái"],
+              ["Đơn vị sử dụng", "ĐTN BV Than - Khoáng sản"],
             ].map(([k, v]) => (
               <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "6px 0", borderBottom: "1px solid #f9f9f9" }}>
                 <span style={{ color: "#999" }}>{k}</span>
