@@ -75,10 +75,11 @@ function AppContent({ currentUser, handleAppLogout }) {
       if (dbData.questions) setQuestions(dbData.questions);
       if (dbData.funds) setFunds(dbData.funds);
       setSyncStatus('Đã đồng bộ');
-      initialLoadDone.current = true;
     } catch (error) {
       console.error("Lỗi đồng bộ:", error);
-      setSyncStatus('Lỗi đồng bộ');
+      setSyncStatus('Chưa có dữ liệu trên Cloud (Sẵn sàng tạo mới)');
+    } finally {
+      initialLoadDone.current = true;
     }
   };
 
