@@ -41,7 +41,7 @@ export default function LoginScreen({ onLogin }) {
             <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/30 shadow-lg">
               <span className="text-white font-black text-3xl">ĐTN</span>
             </div>
-            <h1 className="text-white font-bold text-xl leading-tight mt-1">Chi đoàn Bệnh viện Than - Khoáng sản CS2</h1>
+            <h1 className="text-white font-bold text-xl leading-tight mt-1">Sổ Chi Đoàn Bệnh Viện Than - Khoáng Sản</h1>
             <p className="text-blue-200 text-sm mt-1">Hệ thống Quản lý Đoàn viên</p>
           </div>
 
@@ -53,7 +53,7 @@ export default function LoginScreen({ onLogin }) {
                 type="text"
                 value={username}
                 onChange={e => { setUsername(e.target.value); setError(''); }}
-                placeholder="admin / guest"
+                placeholder="bvtks-cs1 / bvtks-cs2"
                 className="w-full bg-white/10 border border-white/30 text-white placeholder-blue-300 rounded-xl px-4 py-3 outline-none focus:border-white/60 focus:bg-white/20 transition-all"
                 required
                 autoComplete="username"
