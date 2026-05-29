@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LayoutDashboard, Users, FolderOpen, Calendar, Gamepad2, Settings, LogOut, ChevronRight, Wallet, CheckCircle } from 'lucide-react';
 import AccountManager from './AccountManager';
+import { getBranchConfig } from '../data/constants';
 
 const ALL_NAV_ITEMS = [
   { id: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard, adminOnly: false },
@@ -42,7 +43,12 @@ export default function Sidebar({ activeTab, setActiveTab, currentUser, onAppLog
               <span className="text-red-700 font-black text-xl tracking-tight">ĐTN</span>
             </div>
             <h2 className="font-bold text-white text-sm leading-tight text-center" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
-              Chi đoàn Bệnh viện Than<br />Khoáng sản CS2
+              {getBranchConfig(currentUser?.username).title.split('\n').map((line, idx, arr) => (
+                <React.Fragment key={idx}>
+                  {line}
+                  {idx < arr.length - 1 && <br />}
+                </React.Fragment>
+              ))}
             </h2>
             <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.65)' }}>Hệ thống Quản lý</p>
           </div>

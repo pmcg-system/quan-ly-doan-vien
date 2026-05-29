@@ -1,3 +1,35 @@
+export const BRANCH_CONFIGS = {
+  'bvtks-cs1': {
+    title: "Chi đoàn Bệnh viện Than\nKhoáng sản CS1",
+    displayName: "Chi đoàn Bệnh viện Than Khoáng sản CS1",
+    defaultApiUrl: '',
+    defaultFolderDen: '',
+    defaultFolderDi: '',
+    defaultFolderKeHoach: '',
+  },
+  'bvtks-cs2': {
+    title: "Chi đoàn Bệnh viện Than\nKhoáng sản CS2",
+    displayName: "Chi đoàn Bệnh viện Than Khoáng sản CS2",
+    defaultApiUrl: 'https://script.google.com/macros/s/AKfycbwrBrDPYew4uooEFxCPgBumIcj68AiW6DiaGsW4ZmiTXy3O5QdgV-1_od8YLOo0C-Vu/exec',
+    defaultFolderDen: import.meta.env.VITE_FOLDER_VAN_BAN_DEN || '',
+    defaultFolderDi: import.meta.env.VITE_FOLDER_VAN_BAN_DI || '',
+    defaultFolderKeHoach: import.meta.env.VITE_FOLDER_KE_HOACH || '',
+  }
+};
+
+export function getBranchConfig(username) {
+  const base = BRANCH_CONFIGS[username] || BRANCH_CONFIGS['bvtks-cs2'];
+  const key_prefix = username || 'bvtks-cs2';
+  return {
+    title: base.title,
+    displayName: base.displayName,
+    apiUrl: localStorage.getItem(`api_url_${key_prefix}`) || base.defaultApiUrl,
+    folderDen: localStorage.getItem(`folder_den_${key_prefix}`) || base.defaultFolderDen,
+    folderDi: localStorage.getItem(`folder_di_${key_prefix}`) || base.defaultFolderDi,
+    folderKeHoach: localStorage.getItem(`folder_ke_hoach_${key_prefix}`) || base.defaultFolderKeHoach,
+  };
+}
+
 export const API_URL = 'https://script.google.com/macros/s/AKfycbwrBrDPYew4uooEFxCPgBumIcj68AiW6DiaGsW4ZmiTXy3O5QdgV-1_od8YLOo0C-Vu/exec';
 export const TO_DOAN_LIST = ["Phòng ban+Dược", "Nội TH+YHCT-PHCN", "Ngoại-Sản+LCK", "KB-CLS", "Cơ sở 2"];
 export const CHUC_VU_LIST = ["Bí thư Đoàn cơ sở", "Phó bí thư Đoàn cơ sở", "Bí thư chi đoàn", "Phó bí thư chi đoàn", "Ủy viên Ban chấp hành chi đoàn", "Đoàn viên"];

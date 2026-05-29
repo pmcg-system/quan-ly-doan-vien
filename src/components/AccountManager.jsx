@@ -4,14 +4,18 @@ import { X, Plus, Trash2, KeyRound, Eye, EyeOff, Shield, User, RefreshCw } from 
 const STORAGE_KEY = 'app_accounts';
 
 const DEFAULT_ACCOUNTS = [
-  { username: 'admin', password: 'admin@2025', role: 'admin', displayName: 'Ban Quản trị' },
-  { username: 'guest', password: '123456', role: 'guest', displayName: 'Khách xem' },
+  { username: 'bvtks-cs1', password: 'admin@123', role: 'admin', displayName: 'Chi đoàn Bệnh viện Than Khoáng sản CS1' },
+  { username: 'bvtks-cs2', password: 'admin@123', role: 'admin', displayName: 'Chi đoàn Bệnh viện Than Khoáng sản CS2' },
 ];
 
 // Xuất hàm load accounts để LoginScreen dùng
 export function loadAccounts() {
   const saved = localStorage.getItem(STORAGE_KEY);
-  return saved ? JSON.parse(saved) : DEFAULT_ACCOUNTS;
+  if (!saved || saved.includes('"admin"') || saved.includes('"guest"')) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_ACCOUNTS));
+    return DEFAULT_ACCOUNTS;
+  }
+  return JSON.parse(saved);
 }
 
 function saveAccounts(accounts) {
@@ -84,6 +88,10 @@ export default function AccountManager({ currentUser, onClose }) {
   };
 
   const handleDelete = (username) => {
+    if (username === 'bvtks-cs1' || username === 'bvtks-cs2') {
+      showToast('Không thể xóa tài khoản mặc định của hệ thống!', 'error');
+      return;
+    }
     if (username === currentUser.username) { showToast('Không thể xóa tài khoản đang đăng nhập!', 'error'); return; }
     if (accounts.filter(a => a.role === 'admin').length === 1 && accounts.find(a => a.username === username)?.role === 'admin') {
       showToast('Phải có ít nhất 1 tài khoản Admin!', 'error'); return;

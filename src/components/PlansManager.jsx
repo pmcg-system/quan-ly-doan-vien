@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Modal, FI, FS, FT, Btn } from './UI';
-import { RED, GREEN, GOLD, NAVY, TEAL, API_URL } from '../data/constants';
+import { RED, GREEN, GOLD, NAVY, TEAL, getBranchConfig } from '../data/constants';
 import { Sparkles, Copy, FileText, Upload, RefreshCw, Eye, Download, Check, Edit3, Plus, Trash2 } from 'lucide-react';
 
-const FOLDER_KE_HOACH = import.meta.env.VITE_FOLDER_KE_HOACH || '';
-
-async function uploadFileToDrive(file) {
+async function uploadFileToDrive(file, folderId, apiUrl) {
+  if (!apiUrl) {
+    throw new Error("Chưa cấu hình Google Apps Script URL cho Chi đoàn này!");
+  }
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = async () => {
@@ -13,13 +14,13 @@ async function uploadFileToDrive(file) {
         const base64 = reader.result.split(',')[1];
         const payload = {
           action: 'upload_file',
-          folderId: FOLDER_KE_HOACH,
+          folderId: folderId,
           name: file.name,
           mimeType: file.type || 'application/octet-stream',
           base64: base64
         };
 
-        const res = await fetch(API_URL, {
+        const res = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
@@ -94,7 +95,7 @@ async function callGeminiAPI(prompt, geminiApiKey, fileObj = null) {
   throw lastError || new Error("Tất cả các AI models đều bị lỗi!");
 }
 
-export default function PlansManager({ plans, setPlans, isAdmin, geminiApiKey }) {
+export default function PlansManager({ plans, setPlans, isAdmin, geminiApiKey, currentUser }) {
   const [subTab, setSubTab] = useState('list'); // list | ai_plan | ai_report
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -145,11 +146,12 @@ export default function PlansManager({ plans, setPlans, isAdmin, geminiApiKey })
     }
     if (!form.title) return;
     setUploading(true);
+    const config = getBranchConfig(currentUser?.username);
     try {
       let attachment = null;
       let uploadedObj = null;
       if (pendingFile) {
-        uploadedObj = await uploadFileToDrive(pendingFile);
+        uploadedObj = await uploadFileToDrive(pendingFile, config.folderKeHoach, config.apiUrl);
         attachment = {
           name: uploadedObj.name,
           fileId: uploadedObj.id,

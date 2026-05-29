@@ -12,7 +12,7 @@ import PlayerMobile from './components/PlayerMobile'
 import LoginScreen from './components/LoginScreen'
 import FundManager from './components/FundManager'
 import AttendanceManager from './components/AttendanceManager'
-import { RAW_MEMBERS, INIT_PLANS, INIT_QUESTIONS, API_URL } from './data/constants'
+import { RAW_MEMBERS, INIT_PLANS, INIT_QUESTIONS, getBranchConfig } from './data/constants'
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_CLIENT_ID_HERE'
 
@@ -21,34 +21,34 @@ function AppContent({ currentUser, handleAppLogout }) {
 
   const [activeTab, setActiveTab] = useState('dashboard')
   
-  // LocalStorage Cache System
+  // LocalStorage Cache System Scoped by Username
   const [members, setMembers] = useState(() => {
-    const saved = localStorage.getItem('db_members');
+    const saved = localStorage.getItem(`db_members_${currentUser?.username}`);
     return saved ? JSON.parse(saved) : RAW_MEMBERS;
   })
   const [plans, setPlans] = useState(() => {
-    const saved = localStorage.getItem('db_plans');
+    const saved = localStorage.getItem(`db_plans_${currentUser?.username}`);
     return saved ? JSON.parse(saved) : INIT_PLANS;
   })
   const [questions, setQuestions] = useState(() => {
-    const saved = localStorage.getItem('db_questions');
+    const saved = localStorage.getItem(`db_questions_${currentUser?.username}`);
     return saved ? JSON.parse(saved) : INIT_QUESTIONS;
   })
   const [funds, setFunds] = useState(() => {
-    const saved = localStorage.getItem('db_funds');
+    const saved = localStorage.getItem(`db_funds_${currentUser?.username}`);
     return saved ? JSON.parse(saved) : [];
   })
   
-  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('geminiApiKey') || '')
+  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem(`geminiApiKey_${currentUser?.username}`) || '')
   const [syncStatus, setSyncStatus] = useState('Chưa kết nối')
   const initialLoadDone = useRef(false)
 
   // Lưu vào LocalStorage & sync cloud (chỉ admin mới được ghi lên Drive)
   useEffect(() => {
-    localStorage.setItem('db_members', JSON.stringify(members));
-    localStorage.setItem('db_plans', JSON.stringify(plans));
-    localStorage.setItem('db_questions', JSON.stringify(questions));
-    localStorage.setItem('db_funds', JSON.stringify(funds));
+    localStorage.setItem(`db_members_${currentUser?.username}`, JSON.stringify(members));
+    localStorage.setItem(`db_plans_${currentUser?.username}`, JSON.stringify(plans));
+    localStorage.setItem(`db_questions_${currentUser?.username}`, JSON.stringify(questions));
+    localStorage.setItem(`db_funds_${currentUser?.username}`, JSON.stringify(funds));
     if (initialLoadDone.current && isAdmin) {
       uploadToCloud(members, plans, questions, funds);
     }
@@ -59,9 +59,15 @@ function AppContent({ currentUser, handleAppLogout }) {
   }, [])
 
   const downloadFromCloud = async () => {
+    const config = getBranchConfig(currentUser?.username);
+    if (!config.apiUrl) {
+      setSyncStatus('Chưa cấu hình API URL');
+      initialLoadDone.current = true;
+      return;
+    }
     setSyncStatus('Đang đồng bộ...');
     try {
-      const res = await fetch(API_URL);
+      const res = await fetch(config.apiUrl);
       const dbData = await res.json();
       if (dbData.members) setMembers(dbData.members);
       if (dbData.plans) setPlans(dbData.plans);
@@ -76,10 +82,15 @@ function AppContent({ currentUser, handleAppLogout }) {
   };
 
   const uploadToCloud = async (m, p, q, f) => {
+    const config = getBranchConfig(currentUser?.username);
+    if (!config.apiUrl) {
+      setSyncStatus('Chưa cấu hình API URL');
+      return;
+    }
     setSyncStatus('Đang lưu lên Đám mây...');
     try {
       const dbContent = { members: m, plans: p, questions: q, funds: f };
-      const res = await fetch(API_URL, { 
+      const res = await fetch(config.apiUrl, { 
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(dbContent)
@@ -107,19 +118,27 @@ function AppContent({ currentUser, handleAppLogout }) {
       case 'attendance':
         return <AttendanceManager members={members} setMembers={setMembers} plans={plans} setPlans={setPlans} isAdmin={isAdmin} />
       case 'plans':
-        return <PlansManager plans={plans} setPlans={setPlans} isAdmin={isAdmin} geminiApiKey={geminiApiKey} />
+        return <PlansManager plans={plans} setPlans={setPlans} isAdmin={isAdmin} geminiApiKey={geminiApiKey} currentUser={currentUser} />
       case 'games':
         return isAdmin
           ? <GameManager questions={questions} setQuestions={setQuestions} geminiApiKey={geminiApiKey} onNeedSettings={() => setActiveTab('settings')} />
           : null
       case 'settings':
         return isAdmin
-          ? <Settings geminiApiKey={geminiApiKey} setGeminiApiKey={setGeminiApiKey} syncStatus={syncStatus} />
+          ? <Settings 
+              geminiApiKey={geminiApiKey} 
+              setGeminiApiKey={(val) => {
+                setGeminiApiKey(val);
+                localStorage.setItem(`geminiApiKey_${currentUser?.username}`, val);
+              }} 
+              syncStatus={syncStatus} 
+              currentUser={currentUser} 
+            />
           : <div className="bg-white p-12 rounded-2xl text-center text-gray-400 text-lg">🔒 Chức năng này chỉ dành cho Admin.</div>
       case 'documents':
         return (
           <div className="space-y-6">
-            <DocumentManager isAdmin={isAdmin} />
+            <DocumentManager isAdmin={isAdmin} currentUser={currentUser} />
           </div>
         )
       default:

@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Upload, File as FileIcon, Download, Eye, Loader2, Trash2, Search, Plus, Filter } from 'lucide-react';
 
-import { API_URL } from '../data/constants';
+import { getBranchConfig } from '../data/constants';
 
-const FOLDER_DEN = import.meta.env.VITE_FOLDER_VAN_BAN_DEN;
-const FOLDER_DI = import.meta.env.VITE_FOLDER_VAN_BAN_DI;
-
-export default function DocumentManager({ isAdmin }) {
+export default function DocumentManager({ isAdmin, currentUser }) {
+  const config = getBranchConfig(currentUser?.username);
+  const FOLDER_DEN = config.folderDen;
+  const FOLDER_DI = config.folderDi;
+  const API_URL_BRANCH = config.apiUrl;
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -24,18 +25,23 @@ export default function DocumentManager({ isAdmin }) {
 
   // Lấy danh sách file từ API
   const fetchFiles = async () => {
+    if (!API_URL_BRANCH) {
+      setFiles([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const results = [];
       if (FOLDER_DEN) {
-        const res1 = await axios.get(`${API_URL}?action=get_files&folderId=${FOLDER_DEN}`);
+        const res1 = await axios.get(`${API_URL_BRANCH}?action=get_files&folderId=${FOLDER_DEN}`);
         if (res1.data.files) {
           res1.data.files.forEach(f => f.parents = [FOLDER_DEN]);
           results.push(...res1.data.files);
         }
       }
       if (FOLDER_DI) {
-        const res2 = await axios.get(`${API_URL}?action=get_files&folderId=${FOLDER_DI}`);
+        const res2 = await axios.get(`${API_URL_BRANCH}?action=get_files&folderId=${FOLDER_DI}`);
         if (res2.data.files) {
           res2.data.files.forEach(f => f.parents = [FOLDER_DI]);
           results.push(...res2.data.files);
@@ -83,7 +89,13 @@ export default function DocumentManager({ isAdmin }) {
             base64: base64
           };
 
-          const res = await axios.post(API_URL, JSON.stringify(payload), {
+          if (!API_URL_BRANCH) {
+            alert("Tài khoản chưa được cấu hình Google Apps Script URL!");
+            setUploading(false);
+            return;
+          }
+
+          const res = await axios.post(API_URL_BRANCH, JSON.stringify(payload), {
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
           });
 
@@ -126,6 +138,20 @@ export default function DocumentManager({ isAdmin }) {
     if (activeTab === 'DI') return matchesSearch && f.parents?.includes(FOLDER_DI);
     return false;
   });
+
+  if (!API_URL_BRANCH) {
+    return (
+      <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center flex flex-col items-center">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-50 mb-6">
+          <FileIcon className="h-10 w-10 text-blue-500" />
+        </div>
+        <h2 className="text-xl font-semibold text-gray-800 mb-3">Chưa cấu hình CSDL đám mây</h2>
+        <p className="text-gray-500 max-w-md mx-auto mb-6">
+          Vui lòng vào tab <strong>Cài đặt</strong> để thiết lập Google Apps Script API URL cho Chi đoàn này.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
