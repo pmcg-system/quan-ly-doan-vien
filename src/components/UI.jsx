@@ -23,8 +23,8 @@ export function Badge({ text }) {
 
 export function Modal({ title, onClose, children, wide }) {
   const modalContent = (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, overflowY: "auto" }}>
-      <div style={{ background: "#fff", borderRadius: 16, padding: 26, width: "100%", maxWidth: wide ? 800 : 540, margin: "20px auto", boxShadow: "0 20px 60px rgba(0,0,0,0.3)", position: "relative" }}>
+    <div className="modal-overlay" style={{ position: "fixed", inset: 0, zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, overflowY: "auto" }}>
+      <div className="modal-content" style={{ background: "#fff", borderRadius: 16, padding: 26, width: "100%", maxWidth: wide ? 800 : 540, margin: "20px auto", boxShadow: "0 20px 60px rgba(0,0,0,0.3)", position: "relative" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
           <h3 style={{ margin: 0, color: "#1a1a2e", fontSize: 17 }}>{title}</h3>
           <button onClick={onClose} style={{ border: "none", background: "#f0f0f0", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 18 }}>×</button>
@@ -47,13 +47,13 @@ export function FG({ label, children }) {
 
 export const inputStyle = { width: "100%", padding: "8px 11px", border: "1.5px solid #e0e0e0", borderRadius: 7, fontSize: 13, boxSizing: "border-box", outline: "none", fontFamily: "inherit" };
 
-export function FI({ label, ...p }) { return <FG label={label}><input style={inputStyle} {...p} /></FG>; }
-export function FS({ label, opts, ...p }) { return <FG label={label}><select style={inputStyle} {...p}>{opts.map(o => <option key={o}>{o}</option>)}</select></FG>; }
-export function FT({ label, ...p }) { return <FG label={label}><textarea rows={2} style={{ ...inputStyle, resize: "vertical" }} {...p} /></FG>; }
+export function FI({ label, ...p }) { return <FG label={label}><input className="input-premium" style={inputStyle} {...p} /></FG>; }
+export function FS({ label, opts, ...p }) { return <FG label={label}><select className="input-premium" style={inputStyle} {...p}>{opts.map(o => <option key={o}>{o}</option>)}</select></FG>; }
+export function FT({ label, ...p }) { return <FG label={label}><textarea rows={2} className="input-premium" style={{ ...inputStyle, resize: "vertical" }} {...p} /></FG>; }
 
 export function Btn({ children, v = "p", ...p }) {
   const s = { p: { background: `linear-gradient(135deg,${RED},#c1121f)`, color: "#fff" }, s: { background: "#f0f0f0", color: "#333" }, d: { background: "#ffeef0", color: RED } };
-  return <button style={{ padding: "8px 16px", borderRadius: 8, border: "none", fontWeight: 700, cursor: "pointer", fontSize: 13, ...s[v], ...p.style }} {...p}>{children}</button>;
+  return <button className="btn-premium" style={{ padding: "8px 16px", borderRadius: 8, border: "none", fontWeight: 700, cursor: "pointer", fontSize: 13, ...s[v], ...p.style }} {...p}>{children}</button>;
 }
 
 export const SectionDivider = ({ label }) => (

@@ -44,7 +44,7 @@ export default function Dashboard({ members }) {
   }, [activeMembers]);
 
   const CC = ({ title, children }) => (
-    <div style={{ background: "#fff", borderRadius: 14, padding: "18px 20px", boxShadow: "0 2px 12px rgba(0,0,0,0.07)" }}>
+    <div className="card-hover" style={{ background: "#fff", borderRadius: 14, padding: "18px 20px", boxShadow: "0 2px 12px rgba(0,0,0,0.07)" }}>
       <div style={{ fontWeight: 700, fontSize: 13, color: "#1a1a2e", marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ width: 3, height: 16, background: RED, borderRadius: 2, display: "inline-block" }} />{title}
       </div>
@@ -68,7 +68,7 @@ export default function Dashboard({ members }) {
           ["⭐", "Đảng viên", dangVien, "#d4af37"],
           ["🏢", "Tổ đoàn", toDoanData.length, GREEN]
         ].map(([icon, label, value, color]) => (
-          <div key={label} style={{ background: "#fff", borderRadius: 13, padding: "16px 18px", boxShadow: "0 2px 10px rgba(0,0,0,0.07)", borderLeft: `4px solid ${color}` }}>
+          <div key={label} className="card-hover" style={{ background: "#fff", borderRadius: 13, padding: "16px 18px", boxShadow: "0 2px 10px rgba(0,0,0,0.07)", borderLeft: `4px solid ${color}` }}>
             <div style={{ fontSize: 24, marginBottom: 6 }}>{icon}</div>
             <div style={{ fontSize: 30, fontWeight: 800, color, lineHeight: 1 }}>{value}</div>
             <div style={{ fontSize: 12, color: "#999", fontWeight: 600, marginTop: 4 }}>{label}</div>
