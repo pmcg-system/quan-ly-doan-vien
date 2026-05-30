@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { Avatar, Badge, Modal, FG, FI, FS, FT, Btn, SectionDivider, inputStyle } from './UI';
-import { RED, TO_DOAN_LIST, DAN_TOC_LIST, TON_GIAO_LIST, TRINH_DO_VH_LIST, TRINH_DO_CM_LIST, TRINH_DO_LLCT_LIST, TIN_HOC_LIST, NGOAI_NGU_LIST, CHUC_VU_LIST, DOI_TUONG_LIST, REN_LUYEN_LIST, XEP_LOAI_LIST, HOI_LIST, EMPTY_FORM, TRANG_THAI_DV } from '../data/constants';
+import { RED, TO_DOAN_LIST, DAN_TOC_LIST, TON_GIAO_LIST, TRINH_DO_VH_LIST, TRINH_DO_CM_LIST, TRINH_DO_LLCT_LIST, TIN_HOC_LIST, NGOAI_NGU_LIST, CHUC_VU_LIST, DOI_TUONG_LIST, REN_LUYEN_LIST, XEP_LOAI_LIST, HOI_LIST, EMPTY_FORM, TRANG_THAI_DV, getBranchConfig } from '../data/constants';
 
 const STATUS_LABEL = { chuyen_di: 'Chuyển đi', chuyen_den: 'Chuyển đến', truong_thanh: 'Trưởng thành Đoàn', xoa_ten: 'Xóa tên', active: 'Đang sinh hoạt' };
 const STATUS_COLOR = { chuyen_di: '#f97316', truong_thanh: '#8b5cf6', xoa_ten: '#e63946', chuyen_den: '#16a34a', active: '#2a9d8f' };
@@ -284,6 +284,77 @@ export default function MemberManager({ members, setMembers, isAdmin }) {
     }
   };
 
+  const handleExportData = () => {
+    let branchName = "";
+    try {
+      const savedUser = localStorage.getItem('app_current_user');
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        const config = getBranchConfig(u.username);
+        branchName = config.displayName || "";
+      }
+    } catch(e) {}
+
+    const wsData = [
+      ["DANH SÁCH ĐOÀN VIÊN"],
+      [branchName ? `Đơn vị: ${branchName}` : ""],
+      [
+        "STT", "Họ và tên", "Giới tính", "Tổ đoàn", "Mã định danh", "Số thẻ đoàn",
+        "Ngày sinh", "Tuổi", "Dân tộc", "Tôn giáo",
+        "Quê quán", "Địa chỉ thường trú", "Số CMND/CCCD", "Ngày cấp", "Nơi cấp",
+        "Trình độ văn hóa", "Trình độ chuyên môn", "Trình độ lý luận chính trị", "Tin học", "Ngoại ngữ",
+        "Nơi vào Đoàn", "Thời gian vào Đoàn", "Số NQ chuẩn y", "Thời gian vào Đảng", "Nghề nghiệp hiện nay",
+        "Đối tượng đoàn viên", "Rèn luyện đoàn viên", "Đánh giá xếp loại", "Khen thưởng", "Kỷ luật",
+        "Chức vụ trong chi đoàn", "Hội", "Email", "Điện thoại", "Trạng thái"
+      ]
+    ];
+
+    filtered.forEach((m, idx) => {
+      wsData.push([
+        idx + 1,
+        m.hoTen || "",
+        m.gioiTinh || "",
+        m.toDoan || "",
+        m.maDinhDanh || "",
+        m.soThe || "",
+        m.ngaySinh || "",
+        m.tuoi || "",
+        m.danToc || "",
+        m.tonGiao || "",
+        m.queQuan || "",
+        m.diaChiThuongTru || "",
+        m.soCMND || "",
+        m.ngayCap || "",
+        m.noiCap || "",
+        m.trinhDoVH || "",
+        m.trinhDoCM || "",
+        m.trinhDoLLCT || "",
+        m.tinHoc || "",
+        m.ngoaiNgu || "",
+        m.noiVaoDoan || "",
+        m.tgVaoDoan || "",
+        m.soNQ || "",
+        m.tgVaoDang || "",
+        m.ngheNghiep || "",
+        m.doiTuong || "",
+        m.renLuyen || "",
+        m.xepLoai || "",
+        m.khenThuong || "",
+        m.kyLuat || "",
+        m.chucVu || "",
+        m.hoi || "",
+        m.email || "",
+        m.dienThoai || "",
+        STATUS_LABEL[m.trangThai] || "Đang sinh hoạt"
+      ]);
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb, ws, "Danh_Sach");
+    XLSX.writeFile(wb, "danh_sach_doan_vien.xlsx");
+  };
+
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -372,6 +443,7 @@ export default function MemberManager({ members, setMembers, isAdmin }) {
               <input type="file" accept=".xlsx,.xls" ref={fileInputRef} onChange={handleFileUpload} style={{ display: 'none' }} />
               <Btn v="s" onClick={handleExportTemplate}>📄 Tải file mẫu</Btn>
               <Btn v="s" onClick={() => fileInputRef.current?.click()}>📥 Nhập từ Excel</Btn>
+              <Btn v="s" onClick={handleExportData}>📤 Xuất file Excel</Btn>
               <Btn onClick={() => { setEditItem(null); setShowForm(true); }}>+ Thêm đoàn viên</Btn>
             </>
           )}
@@ -401,10 +473,20 @@ export default function MemberManager({ members, setMembers, isAdmin }) {
                   const colKeys = { "Họ và tên": "hoTen", "Tuổi": "tuoi", "Tổ đoàn": "toDoan", "Chức vụ": "chucVu", "Tr.độ CM": "trinhDoCM", "Điện thoại": "dienThoai" };
                   const isSortable = !!colKeys[h];
                   const isActiveSort = sortConfig.key === colKeys[h];
+                  const widthMap = {
+                    "#": "50px",
+                    "Họ và tên": "180px",
+                    "Tuổi": "70px",
+                    "Tổ đoàn": "140px",
+                    "Chức vụ": "140px",
+                    "Tr.độ CM": "150px",
+                    "Điện thoại": "120px",
+                    "": "180px"
+                  };
                   return (
                     <th key={h} 
                         onClick={() => isSortable && handleSort(colKeys[h])}
-                        style={{ padding: "11px 13px", textAlign: "left", fontWeight: 700, color: "#666", whiteSpace: "nowrap", fontSize: 12, position: "sticky", top: 0, background: "#fafafa", zIndex: 2, boxShadow: "0 1px 0 #e0e0e0", cursor: isSortable ? "pointer" : "default", userSelect: "none" }}>
+                        style={{ width: widthMap[h] || "auto", padding: "11px 13px", textAlign: "left", fontWeight: 700, color: "#666", whiteSpace: "nowrap", fontSize: 12, position: "sticky", top: 0, background: "#fafafa", zIndex: 2, boxShadow: "0 1px 0 #e0e0e0", cursor: isSortable ? "pointer" : "default", userSelect: "none" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         {h}
                         {isSortable && (
@@ -427,25 +509,25 @@ export default function MemberManager({ members, setMembers, isAdmin }) {
                     onMouseEnter={e => e.currentTarget.style.background = inactive ? "#f5f5f5" : "#fff8f8"}
                     onMouseLeave={e => e.currentTarget.style.background = ""}
                   >
-                    <td style={{ padding: "9px 13px", color: "#bbb", fontSize: 12 }}>{i + 1}</td>
-                    <td style={{ padding: "9px 13px", whiteSpace: "nowrap" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                    <td style={{ padding: "9px 13px", color: "#bbb", fontSize: 12, width: "50px" }}>{i + 1}</td>
+                    <td style={{ padding: "9px 13px", whiteSpace: "nowrap", width: "180px", maxWidth: "180px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 9, overflow: "hidden" }}>
                         <Avatar name={m.hoTen} size={30} />
-                        <div style={{ display: "flex", flexDirection: "column" }}>
-                          <span onClick={() => setDetail(m)} style={{ fontWeight: 600, color: inactive ? "#999" : "#1a1a2e", cursor: 'pointer', textDecoration: 'underline dotted', textDecorationColor: '#ccc', whiteSpace: "nowrap" }}>{m.hoTen}</span>
+                        <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                          <span onClick={() => setDetail(m)} title={m.hoTen} style={{ fontWeight: 600, color: inactive ? "#999" : "#1a1a2e", cursor: 'pointer', textDecoration: 'underline dotted', textDecorationColor: '#ccc', whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>{m.hoTen}</span>
                           {st && st !== TRANG_THAI_DV.ACTIVE && (
-                            <div style={{ fontSize: 10, color: STATUS_COLOR[st] || '#aaa', fontWeight: 700, whiteSpace: "nowrap" }}>
+                            <div style={{ fontSize: 10, color: STATUS_COLOR[st] || '#aaa', fontWeight: 700, whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>
                               {STATUS_LABEL[st]}{st === TRANG_THAI_DV.CHUYEN_DI && m.noiDen ? ` → ${m.noiDen}` : ''}{m.ngayBienDong ? ` (${new Date(m.ngayBienDong).toLocaleDateString('vi-VN')})` : ''}
                             </div>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td style={{ padding: "9px 13px", color: "#666" }}>{m.tuoi}</td>
-                    <td style={{ padding: "9px 13px", color: "#555", whiteSpace: "nowrap", fontSize: 12 }}>{m.toDoan}</td>
-                    <td style={{ padding: "9px 13px" }}><Badge text={m.chucVu} /></td>
-                    <td style={{ padding: "9px 13px" }}><Badge text={m.trinhDoCM} /></td>
-                    <td style={{ padding: "9px 13px", color: "#888", fontSize: 12, whiteSpace: "nowrap" }}>{m.dienThoai}</td>
+                    <td style={{ padding: "9px 13px", color: "#666", width: "70px" }}>{m.tuoi}</td>
+                    <td style={{ padding: "9px 13px", color: "#555", whiteSpace: "nowrap", fontSize: 12, width: "140px" }}>{m.toDoan}</td>
+                    <td style={{ padding: "9px 13px", width: "140px" }}><Badge text={m.chucVu} /></td>
+                    <td style={{ padding: "9px 13px", width: "150px" }}><Badge text={m.trinhDoCM} /></td>
+                    <td style={{ padding: "9px 13px", color: "#888", fontSize: 12, whiteSpace: "nowrap", width: "120px" }}>{m.dienThoai}</td>
                     <td style={{ padding: "9px 13px" }}>
                       <div style={{ display: "flex", gap: 5 }}>
                         {isAdmin && (
